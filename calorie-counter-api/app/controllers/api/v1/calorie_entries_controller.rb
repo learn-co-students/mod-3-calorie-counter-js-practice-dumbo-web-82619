@@ -36,8 +36,8 @@ class Api::V1::CalorieEntriesController < ApplicationController
 
   # DELETE /api/v1/calorie_entries/1
   def destroy
-    @api_v1_calorie_entry = @api_v1_calorie_entry.destroy
-    render json: @api_v1_calorie_entry
+    @api_v1_calorie_entry.destroy
+    render json: {message: 'deleted'}
   end
 
   private

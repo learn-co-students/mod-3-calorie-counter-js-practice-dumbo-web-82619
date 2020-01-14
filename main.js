@@ -6,6 +6,10 @@ const progressBar = document.querySelector('progress')
 const lowBMR = document.querySelector('#lower-bmr-range')
 const highBMR = document.querySelector('#higher-bmr-range')
 const BMRForm = document.querySelector('#bmr-calulator')
+const editCal = document.querySelector('#edit-calorie-count')
+const editNote = document.querySelector('#edit-calorie-note')
+const editEntryForm = document.querySelector('#edit-calorie-form')
+let editEntry = {}
 
 getEntries()
 
@@ -20,6 +24,7 @@ function getEntries() {
   })
 }
 
+
 function setProgressBar() {
   fetch('http://localhost:3000/api/v1/calorie_entries')
   .then(response => response.json())
@@ -30,41 +35,10 @@ function setProgressBar() {
   })
 }
 
+
 function addEntryLiToEntriesUl(entry) {
   let newLi = document.createElement('li')
-  // let contentDiv = document.createElement('div')
-  // let buttonDiv = document.createElement('div')
-  // let calorieDiv = document.createElement('div')
-  // let noteDiv = document.createElement('div')
-  // let strongTag = document.createElement('strong')
-  // let spanTag = document.createElement('span')
-  // let emTag = document.createElement('em')
-  // let editBtn = document.createElement('a')
-  // let deleteBtn = document.createElement('a')
-
-  // newLi.className = 'calories-list-item'
-  // contentDiv.className = 'uk-grid'
-  // calorieDiv.className = 'uk-width-1-6'  
-  // strongTag.innerText = entry.calorie
-  // spanTag.innerText = 'kcal'
-  // noteDiv.className = 'uk-width-4-5'
-  // emTag.className = 'uk-text-meta'
-  // emTag.innerText = entry.note
-  // buttonDiv.className = 'list-item-menu'
-  // editBtn.className = 'edit-button'
-  // editBtn.setAttribute('uk-icon', 'icon: pencil')
-  // editBtn.setAttribute('uk-toggle', 'target: #edit-form-container')
-  // deleteBtn.className = 'delete-button'
-  // deleteBtn.setAttribute('uk-icon', 'icon: trash')
-
   
-
-  // calorieDiv.append(strongTag, spanTag)
-  // noteDiv.append(emTag)
-  // contentDiv.append(calorieDiv, noteDiv)
-  // buttonDiv.append(editBtn, deleteBtn)
-  // newLi.append(contentDiv, buttonDiv)
-
   newLi.className = 'calories-list-item' 
   newLi.innerHTML = 
   `<div class="uk-grid">
@@ -81,15 +55,32 @@ function addEntryLiToEntriesUl(entry) {
     <a class="delete-button" uk-icon="icon: trash"></a>
   </div>`
 
-  // newLi.addEventListener('click', event => {
-  //   console.log(event.target.parentElement['uk-icon'])
-  //   // uk-icon="icon: trash"
-  //   // if (event.target.parentElement.class === 'delete-button uk-icon') console.log('deleted')
-  // })
+  newLi.addEventListener('click', event => {
+    if (event.target.parentElement.className === 'delete-button uk-icon') {
+      fetch(`http://localhost:3000/api/v1/calorie_entries/${entry.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(message => {
+        console.log(message)
+        getEntries()
+        setProgressBar()
+      })
+    } else if (event.target.parentElement.className === 'edit-button uk-icon') {
+      editCal.value = entry.calorie
+      editNote.value = entry.note
+      editEntry = entry
+    }
+  })
 
   caloriesUl.prepend(newLi)
   setProgressBar()
 }
+
 
 newEntryForm.addEventListener('submit', (event) => {
   event.preventDefault()
@@ -111,8 +102,37 @@ newEntryForm.addEventListener('submit', (event) => {
   .then(response => response.json())
   .then(newEntry => {
     addEntryLiToEntriesUl(newEntry)
+    newEntryForm.reset()
   })
 })
+
+
+editEntryForm.addEventListener('submit', (event) => {
+  event.preventDefault()
+
+  let calCount = event.target['edit-calorie-count'].value
+  let calNote = event.target['edit-calorie-note'].value
+
+  fetch(`http://localhost:3000/api/v1/calorie_entries/${editEntry.id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({
+      calorie: calCount,
+      note: calNote
+    })
+  })
+  .then(response => response.json())
+  .then(newEntry => {
+    console.log(newEntry)
+    getEntries()
+    setProgressBar()
+  })
+
+})
+
 
 BMRForm.addEventListener('submit', (event) => {
   event.preventDefault()
